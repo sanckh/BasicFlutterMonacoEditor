@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- Load the Monaco Editor Loader Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.47.0/min/vs/loader.min.js"
+    integrity="sha512-ZG31AN9z/CQD1YDDAK4RUAvogwbJHv6bHrumrnMLzdCrVu4HeAqrUX7Jsal/cbUwXGfaMUNmQU04tQ8XXl5Znw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      /* Establishes a flex container */
+      overflow: hidden;
+      /* Prevents unwanted overflow */
+    }
+
+    #editorArea,
+    #output {
+      flex: 1;
+      /* This ensures both the editor area and output take up equal space */
+      min-width: 0;
+      /* Prevents flex items from growing beyond their content size, allowing shrinking */
+    }
+
+    #editorArea {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      /* Ensures overflow content in the editor is scrollable */
+    }
+
+    #toolbar {
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #ccc;
+    }
+
+    #editorContainer {
+      flex-grow: 1;
+      overflow: auto;
+      /* Allows scrolling within the editor if content overflows */
+    }
+
+    #container {
+      width: 100%;
+      height: 100%;
+      /* Ensures the editor uses the full available area */
+    }
+
+    #outputArea {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      /* Equal width with the editor area */
+      overflow: hidden;
+      /* Hide overflow */
+    }
+
+    #outputToolbar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #ccc;
+    }
+
+
+    #output {
+      flex-grow: 1;
+      padding: 10px;
+      overflow: auto;
+      /* Make output scrollable */
+      border-left: 1px solid #ddd;
+      /* Visual separation */
+    }
+  </style>
+</head>
+
+<body>
+  <div id="editorArea">
+    <div id="toolbar">
+      <select id="languageSelector">
+        <option value="javascript">JavaScript</option>
+        <option value="html">HTML</option>
+        <option value="css">CSS</option>
+        <option value="python">Python</option>
+        <!-- Additional languages -->
+      </select>
+    </div>
+    <div id="editorContainer">
+      <div id="container"></div>
+    </div>
+  </div>
+  <div id="outputArea">
+    <div id="outputToolbar">
+      <button id="runCodeButton">Run</button>
+      <button id="exitEditorButton" style="float: right;">Exit Editor</button>
+    </div>
+    <div id="output">Output will appear here...</div>
+  </div>
+
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      require.config({
+        paths: {
+          'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.47.0/min/vs'
+        }
+      });
+      require(['vs/editor/editor.main'], function () {
+        var editor = monaco.editor.create(document.getElementById('container'), {
+          value: "// Your code here",
+          language: 'javascript',
+          theme: 'vs-dark',
+          automaticLayout: true
+        });
+
+        // Listen for changes in the language selector and update the editor
+        document.getElementById('languageSelector').addEventListener('change', function () {
+          var newLanguage = this.value;
+          monaco.editor.setModelLanguage(editor.getModel(), newLanguage);
+        });
+      });
+
+      document.getElementById('runCodeButton').addEventListener('click', function () {
+        // Save the original console.log
+        const originalConsoleLog = console.log;
+
+        // Clear the output window before each run
+        document.getElementById('output').textContent = '';
+
+        // Override console.log
+        console.log = function (...args) {
+          // Display output in the UI's output window
+          document.getElementById('output').textContent += args.join(' ') + '\n';
+          // Optionally call the original console.log to see output in the browser console as well
+          // originalConsoleLog.apply(console, args);
+        };
+
+        try {
+          // Get the current code from the Monaco editor
+          const userCode = monaco.editor.getModels()[0].getValue();
+
+          // Evaluate the user's code
+          eval(userCode);
+        } catch (e) {
+          // If an error occurs, display it in the output window
+          document.getElementById('output').textContent = 'Error: ' + e.message;
+        } finally {
+          // Restore the original console.log
+          console.log = originalConsoleLog;
+        }
+      });
+
+    });
+  </script>
+</body>
+
+</html>
